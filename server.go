@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"time"
 )
 
@@ -18,13 +19,15 @@ func NewServer(backend string) *http.Server {
 	})
 
 	r.Use(func(c *gin.Context) {
+		backendUrl := backend + c.Request.URL.Path
+		fmt.Println(backendUrl)
 		if c.Request.Method != http.MethodGet {
-			getProxy(c)
+			getProxy(backendUrl, c)
 			return
 		}
 
 		if true {
-			response, hitCache, err := rd.getSSR(backend + c.Request.URL.Path)
+			response, hitCache, err := rd.getSSR(backendUrl)
 
 			log.Println("request:", c.Request.URL.Path)
 			log.Println("hitCache:", hitCache)
@@ -32,7 +35,7 @@ func NewServer(backend string) *http.Server {
 			c.String(response.Status, response.Content)
 			return
 		} else {
-			getProxy(c)
+			getProxy(backendUrl, c)
 			return
 		}
 	})
@@ -45,11 +48,12 @@ func NewServer(backend string) *http.Server {
 	}
 }
 
-func getProxy(c *gin.Context) {
+func getProxy(backendUrl string, c *gin.Context) {
+	back, _ := url.Parse(backendUrl)
 	director := func(req *http.Request) {
-		req.Host = c.Request.Host
-		req.URL.Scheme = c.Request.URL.Scheme
-		req.URL.Host = c.Request.URL.Host
+		req.Host = back.Host
+		req.URL.Scheme = back.Scheme
+		req.URL.Host = back.Host
 		req.RequestURI = c.Request.RequestURI
 	}
 	proxy := &httputil.ReverseProxy{Director: director}
