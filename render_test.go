@@ -8,14 +8,17 @@ func TestService_RenderPage(t *testing.T) {
 	service := New(Config{
 		CacheSize: 1000,
 		//return html after waiting
-		WaitTime:  3,
+		WaitTime:      3,
 		BackendServer: "http://bing.com",
 	})
 
-	html1,_  :=service.RenderPageDynamically("/")
-	html2,hitCache2  :=service.RenderPageDynamically("/")
+	file1, _, _ := service.RenderPageDynamically("/")
+	file2, hitCache2, _ := service.RenderPageDynamically("/")
 
-	if html1 != html2 {
+	if file1.Content != file2.Content {
+		t.Fatalf("render error")
+	}
+	if file1.ContentType != file2.ContentType {
 		t.Fatalf("render error")
 	}
 	if !hitCache2 {
