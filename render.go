@@ -16,10 +16,9 @@ import (
 )
 
 type Config struct {
-	CacheSize     int
-	WaitTime      time.Duration
-	Compress      string
-	BackendServer string
+	CacheSize int
+	WaitTime  time.Duration
+	Compress  string
 }
 
 type render struct {
@@ -31,12 +30,14 @@ type render struct {
 type Response struct {
 	Status      int
 	Content     string
+	Header      http.Header
 	ContentType string
 }
 
 type cachedResponse struct {
 	Status            int
 	CompressedContent []byte
+	Header            http.Header
 	ContentType       string
 }
 
@@ -57,6 +58,7 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 
 		return &Response{
 			Status:      cachedResponse.Status,
+			Header:      cachedResponse.Header,
 			Content:     out.String(),
 			ContentType: cachedResponse.ContentType,
 		}, true
@@ -81,13 +83,13 @@ func (s *render) setCache(url string, response *Response) {
 	})
 }
 
-func (s *render) getSSR(relativeUrl string) (response *Response, hitCache bool, err error) {
+func (s *render) getSSR(url string) (response *Response, hitCache bool, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	response = nil
 	hitCache = false
-	if file, ok := s.getFromCache(relativeUrl); ok {
+	if file, ok := s.getFromCache(url); ok {
 		return file, true, nil
 	}
 
@@ -95,7 +97,7 @@ func (s *render) getSSR(relativeUrl string) (response *Response, hitCache bool, 
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
-	requestUrl := s.BackendServer + "/" + relativeUrl
+	requestUrl := url
 
 	resp, err := http.Head(requestUrl)
 	if err != nil {
@@ -104,7 +106,6 @@ func (s *render) getSSR(relativeUrl string) (response *Response, hitCache bool, 
 	defer resp.Body.Close()
 
 	contentType := resp.Header.Get("Content-Type")
-	status := resp.StatusCode
 
 	// run task list
 	strChn := make(chan string)
@@ -124,12 +125,13 @@ func (s *render) getSSR(relativeUrl string) (response *Response, hitCache bool, 
 	}()
 
 	response = &Response{
-		Status:      status,
+		Header:      resp.Header,
+		Status:      resp.StatusCode,
 		Content:     <-strChn,
 		ContentType: contentType,
 	}
 
-	s.setCache(relativeUrl, response)
+	s.setCache(url, response)
 
 	return response, false, nil
 }
