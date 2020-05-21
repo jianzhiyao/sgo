@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
-func NewServer(backend string) *http.Server {
+func NewServer(backend string, port int) *http.Server {
+	if port == 0 {
+		port = 8888
+	}
+	
 	r := gin.New()
 
 	rd := New(Config{
@@ -41,7 +45,7 @@ func NewServer(backend string) *http.Server {
 	})
 
 	return &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", "0.0.0.0", 8887),
+		Addr:         fmt.Sprintf("%s:%d", "0.0.0.0", port),
 		Handler:      r,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
