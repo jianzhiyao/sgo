@@ -3,6 +3,7 @@ package sgo
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -23,9 +24,11 @@ func NewServer(backend string) *http.Server {
 		}
 
 		if true {
-			response, _, _ := rd.getSSR(backend + c.Request.URL.Path)
+			response, hitCache, err := rd.getSSR(backend + c.Request.URL.Path)
 
-			c.Header("Content-Type", response.ContentType)
+			log.Println("request:", c.Request.URL.Path)
+			log.Println("hitCache:", hitCache)
+			log.Println("err:", err)
 			c.String(response.Status, response.Content)
 			return
 		} else {
