@@ -1,7 +1,6 @@
 package sgo
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -20,9 +19,6 @@ func TestService_RenderPage(t *testing.T) {
 	}
 	if file1.ContentType != file2.ContentType {
 		t.Fatalf("ContentType error")
-	}
-	if reflect.DeepEqual(file1.Header, file2.Header) {
-		t.Fatalf("Header error")
 	}
 	if !hitCache2 {
 		t.Fatalf("cannot hit cache")

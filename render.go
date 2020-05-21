@@ -25,19 +25,18 @@ type render struct {
 	Config
 	cache *lru.Cache
 	mutex sync.Mutex
+	cacheMutex sync.Mutex
 }
 
 type Response struct {
 	Status      int
 	Content     string
-	Header      http.Header
 	ContentType string
 }
 
 type cachedResponse struct {
 	Status            int
 	CompressedContent []byte
-	Header            http.Header
 	ContentType       string
 }
 
@@ -46,7 +45,11 @@ func (s *render) urlHash(url string) string {
 	h.Write([]byte(url))
 	return fmt.Sprintf("%x\n", h.Sum(nil))
 }
+
 func (s *render) getFromCache(url string) (file *Response, ok bool) {
+	s.cacheMutex.Lock()
+	defer s.cacheMutex.Unlock()
+
 	urlHash := s.urlHash(url)
 
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
@@ -58,7 +61,6 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 
 		return &Response{
 			Status:      cachedResponse.Status,
-			Header:      cachedResponse.Header,
 			Content:     out.String(),
 			ContentType: cachedResponse.ContentType,
 		}, true
@@ -68,6 +70,9 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 }
 
 func (s *render) setCache(url string, response *Response) {
+	s.cacheMutex.Lock()
+	defer s.cacheMutex.Unlock()
+
 	urlHash := s.urlHash(url)
 
 	var in bytes.Buffer
@@ -84,9 +89,6 @@ func (s *render) setCache(url string, response *Response) {
 }
 
 func (s *render) getSSR(url string) (response *Response, hitCache bool, err error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	response = nil
 	hitCache = false
 	if file, ok := s.getFromCache(url); ok {
@@ -125,7 +127,6 @@ func (s *render) getSSR(url string) (response *Response, hitCache bool, err erro
 	}()
 
 	response = &Response{
-		Header:      resp.Header,
 		Status:      resp.StatusCode,
 		Content:     <-strChn,
 		ContentType: contentType,
