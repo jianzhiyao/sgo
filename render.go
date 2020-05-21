@@ -33,7 +33,7 @@ type File struct {
 	ContentType string
 }
 
-type CachedFile struct {
+type cachedFile struct {
 	CompressedContent []byte
 	ContentType       string
 }
@@ -47,7 +47,7 @@ func (s *render) getFromCache(url string) (file *File, ok bool) {
 	urlHash := s.urlHash(url)
 
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
-		cachedFile := cacheResult.(CachedFile)
+		cachedFile := cacheResult.(cachedFile)
 		in := *bytes.NewBuffer(cachedFile.CompressedContent)
 		var out bytes.Buffer
 		r, _ := gzip.NewReader(&in)
@@ -71,7 +71,7 @@ func (s *render) setCache(url string, file *File) {
 	_, _ = w.Write(b)
 	_ = w.Close()
 
-	s.cache.Add(urlHash, CachedFile{
+	s.cache.Add(urlHash, cachedFile{
 		CompressedContent: in.Bytes(),
 		ContentType:       file.ContentType,
 	})
