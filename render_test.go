@@ -12,14 +12,17 @@ func TestService_RenderPage(t *testing.T) {
 		BackendServer: "http://bing.com",
 	})
 
-	file1, _, _ := service.RenderPageDynamically("/")
-	file2, hitCache2, _ := service.RenderPageDynamically("/")
+	file1, _, _ := service.getSSR("/")
+	file2, hitCache2, _ := service.getSSR("/")
 
 	if file1.Content != file2.Content {
-		t.Fatalf("render error")
+		t.Fatalf("Content error")
 	}
 	if file1.ContentType != file2.ContentType {
-		t.Fatalf("render error")
+		t.Fatalf("ContentType error")
+	}
+	if file1.Status != file2.Status {
+		t.Fatalf("Status error")
 	}
 	if !hitCache2 {
 		t.Fatalf("cannot hit cache")

@@ -28,12 +28,14 @@ type render struct {
 	mutex sync.Mutex
 }
 
-type File struct {
+type Response struct {
+	Status      int
 	Content     string
 	ContentType string
 }
 
-type cachedFile struct {
+type cachedResponse struct {
+	Status            int
 	CompressedContent []byte
 	ContentType       string
 }
@@ -43,45 +45,47 @@ func (s *render) urlHash(url string) string {
 	h.Write([]byte(url))
 	return fmt.Sprintf("%x\n", h.Sum(nil))
 }
-func (s *render) getFromCache(url string) (file *File, ok bool) {
+func (s *render) getFromCache(url string) (file *Response, ok bool) {
 	urlHash := s.urlHash(url)
 
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
-		cachedFile := cacheResult.(cachedFile)
-		in := *bytes.NewBuffer(cachedFile.CompressedContent)
+		cachedResponse := cacheResult.(cachedResponse)
+		in := *bytes.NewBuffer(cachedResponse.CompressedContent)
 		var out bytes.Buffer
 		r, _ := gzip.NewReader(&in)
 		_, _ = io.Copy(&out, r)
 
-		return &File{
+		return &Response{
+			Status:      cachedResponse.Status,
 			Content:     out.String(),
-			ContentType: cachedFile.ContentType,
+			ContentType: cachedResponse.ContentType,
 		}, true
 	}
 
 	return nil, false
 }
 
-func (s *render) setCache(url string, file *File) {
+func (s *render) setCache(url string, response *Response) {
 	urlHash := s.urlHash(url)
 
 	var in bytes.Buffer
-	b := []byte(file.Content)
+	b := []byte(response.Content)
 	w := gzip.NewWriter(&in)
 	_, _ = w.Write(b)
 	_ = w.Close()
 
-	s.cache.Add(urlHash, cachedFile{
+	s.cache.Add(urlHash, cachedResponse{
+		Status:            response.Status,
 		CompressedContent: in.Bytes(),
-		ContentType:       file.ContentType,
+		ContentType:       response.ContentType,
 	})
 }
 
-func (s *render) RenderPageDynamically(relativeUrl string) (file *File, hitCache bool, err error) {
+func (s *render) getSSR(relativeUrl string) (response *Response, hitCache bool, err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	file = nil
+	response = nil
 	hitCache = false
 	if file, ok := s.getFromCache(relativeUrl); ok {
 		return file, true, nil
@@ -100,6 +104,7 @@ func (s *render) RenderPageDynamically(relativeUrl string) (file *File, hitCache
 	defer resp.Body.Close()
 
 	contentType := resp.Header.Get("Content-Type")
+	status := resp.StatusCode
 
 	// run task list
 	strChn := make(chan string)
@@ -118,14 +123,15 @@ func (s *render) RenderPageDynamically(relativeUrl string) (file *File, hitCache
 		close(strChn)
 	}()
 
-	file = &File{
+	response = &Response{
+		Status:      status,
 		Content:     <-strChn,
 		ContentType: contentType,
 	}
 
-	s.setCache(relativeUrl, file)
+	s.setCache(relativeUrl, response)
 
-	return file, false, nil
+	return response, false, nil
 }
 
 func New(config Config) *render {
