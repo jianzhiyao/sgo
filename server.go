@@ -11,10 +11,6 @@ import (
 )
 
 func NewServer(backend string, port int) *http.Server {
-	if port == 0 {
-		port = 8888
-	}
-	
 	r := gin.New()
 
 	rd := New(Config{
