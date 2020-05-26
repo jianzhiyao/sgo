@@ -10,9 +10,9 @@ Render website like a browser and return html without any external dependencies
 ### Run in code
 
 ```go
-rd := NewRender(Config{
+rd := sgo.NewRender(sgo.Config{
 		CacheSize: 1000,
-		WaitTime:  time.Duration(WaitSecond),
+		WaitTime:  time.Duration(3),
 	})
 
 response, hitCache, err := rd.GetSSR(backendUrl)
