@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func NewServer(backend string, port int) *http.Server {
+func NewDefaultServer(backend string, port int) *http.Server {
 	r := gin.New()
 
 	rd := New(Config{
@@ -22,7 +22,7 @@ func NewServer(backend string, port int) *http.Server {
 		backendUrl := backend + c.Request.URL.Path
 		fmt.Println(backendUrl)
 		if c.Request.Method != http.MethodGet {
-			getProxy(backendUrl, c)
+			GetProxy(backendUrl, c)
 			return
 		}
 
@@ -31,11 +31,13 @@ func NewServer(backend string, port int) *http.Server {
 
 			log.Println("request:", c.Request.URL.Path)
 			log.Println("hitCache:", hitCache)
+			log.Println("ContentType:", response.ContentType)
 			log.Println("err:", err)
+			c.Header(`Content-Type`, response.ContentType)
 			c.String(response.Status, response.Content)
 			return
 		} else {
-			getProxy(backendUrl, c)
+			GetProxy(backendUrl, c)
 			return
 		}
 	})
@@ -48,7 +50,7 @@ func NewServer(backend string, port int) *http.Server {
 	}
 }
 
-func getProxy(backendUrl string, c *gin.Context) {
+func GetProxy(backendUrl string, c *gin.Context) {
 	back, _ := url.Parse(backendUrl)
 	director := func(req *http.Request) {
 		req.Host = back.Host

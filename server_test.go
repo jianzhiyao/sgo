@@ -3,5 +3,5 @@ package sgo
 import "testing"
 
 func TestServe(t *testing.T) {
-	NewServer("https://bing.com").ListenAndServe()
+	NewDefaultServer("https://baidu.com",8886).ListenAndServe()
 }

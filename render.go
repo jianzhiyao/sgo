@@ -9,6 +9,7 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/hashicorp/golang-lru"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"sync"
@@ -111,20 +112,39 @@ func (s *render) getSSR(url string) (response *Response, hitCache bool, err erro
 
 	// run task list
 	strChn := make(chan string)
-	go func() {
-		var res string
-		err := chromedp.Run(ctx,
-			chromedp.Navigate(requestUrl),
-			chromedp.Sleep(s.WaitTime*time.Second),
-			chromedp.OuterHTML(`html`, &res, chromedp.NodeVisible, chromedp.ByQuery),
-		)
-		if err != nil {
-			log.Fatal(err)
-		}
+	//only render `text/html`
+	if contentType == `text/html` {
+		go func() {
+			var res string
+			err := chromedp.Run(ctx,
+				chromedp.Navigate(requestUrl),
+				chromedp.Sleep(s.WaitTime*time.Second),
+				chromedp.OuterHTML(`html`, &res, chromedp.NodeVisible, chromedp.ByQuery),
+			)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		strChn <- res
-		close(strChn)
-	}()
+			strChn <- res
+			close(strChn)
+		}()
+	} else {
+		go func() {
+			resp, err := http.Get(requestUrl)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			strChn <- string(body)
+			close(strChn)
+		}()
+	}
 
 	response = &Response{
 		Status:      resp.StatusCode,
