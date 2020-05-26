@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/golang-lru"
 	"io"
 	"io/ioutil"
-	"log"
+		"log"
 	"net/http"
 	"sync"
 	"time"
@@ -157,7 +157,7 @@ func (s *render) getSSR(url string) (response *Response, hitCache bool, err erro
 	return response, false, nil
 }
 
-func New(config Config) *render {
+func NewRender(config Config) *render {
 	lruCache, _ := lru.New(config.CacheSize)
 	return &render{
 		Config: config,

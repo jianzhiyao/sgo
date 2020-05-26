@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-func NewDefaultServer(backend string, port int) *http.Server {
+func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
 	r := gin.New()
 
-	rd := New(Config{
+	rd := NewRender(Config{
 		CacheSize: 1000,
-		WaitTime:  3,
+		WaitTime:  time.Duration(WaitSecond),
 	})
 
 	r.Use(func(c *gin.Context) {

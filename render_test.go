@@ -5,7 +5,7 @@ import (
 )
 
 func TestService_RenderPage(t *testing.T) {
-	service := New(Config{
+	service := NewRender(Config{
 		CacheSize: 1000,
 		//return html after waiting
 		WaitTime: 3,
