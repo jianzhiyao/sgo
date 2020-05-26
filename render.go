@@ -89,7 +89,7 @@ func (s *render) setCache(url string, response *Response) {
 	})
 }
 
-func (s *render) getSSR(url string) (response *Response, hitCache bool, err error) {
+func (s *render) GetSSR(url string) (response *Response, hitCache bool, err error) {
 	response = nil
 	hitCache = false
 	if file, ok := s.getFromCache(url); ok {

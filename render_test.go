@@ -11,8 +11,8 @@ func TestService_RenderPage(t *testing.T) {
 		WaitTime: 3,
 	})
 
-	file1, _, _ := service.getSSR("http://bing.com/")
-	file2, hitCache2, _ := service.getSSR("http://bing.com/")
+	file1, _, _ := service.GetSSR("http://bing.com/")
+	file2, hitCache2, _ := service.GetSSR("http://bing.com/")
 
 	if file1.Content != file2.Content {
 		t.Fatalf("Content error")

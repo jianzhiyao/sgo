@@ -20,26 +20,21 @@ func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
 
 	r.Use(func(c *gin.Context) {
 		backendUrl := backend + c.Request.URL.Path
-		fmt.Println(backendUrl)
 		if c.Request.Method != http.MethodGet {
 			GetProxy(backendUrl, c)
 			return
 		}
 
-		if true {
-			response, hitCache, err := rd.getSSR(backendUrl)
+		response, hitCache, err := rd.GetSSR(backendUrl)
 
-			log.Println("request:", c.Request.URL.Path)
-			log.Println("hitCache:", hitCache)
-			log.Println("ContentType:", response.ContentType)
-			log.Println("err:", err)
-			c.Header(`Content-Type`, response.ContentType)
-			c.String(response.Status, response.Content)
-			return
-		} else {
-			GetProxy(backendUrl, c)
-			return
-		}
+		log.Println("request:", c.Request.URL.Path)
+		log.Println("hitCache:", hitCache)
+		log.Println("ContentType:", response.ContentType)
+		log.Println("err:", err)
+		c.Header(`Content-Type`, response.ContentType)
+		c.String(response.Status, response.Content)
+		return
+
 	})
 
 	return &http.Server{
