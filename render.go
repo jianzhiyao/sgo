@@ -19,14 +19,14 @@ import (
 type Config struct {
 	CacheSize int
 	WaitTime  time.Duration
-	CacheTime int
+	CacheTime int64
 	Compress  string
 }
 
 type render struct {
 	Config
 	cache      *lru.Cache
-	cacheTime  int
+	cacheTime  int64
 	mutex      sync.Mutex
 	cacheMutex sync.Mutex
 }
@@ -41,7 +41,7 @@ type cachedResponse struct {
 	Status            int
 	CompressedContent []byte
 	ContentType       string
-	CacheTime         int
+	CacheTime         int64
 }
 
 func (s *render) urlHash(url string) string {
@@ -59,10 +59,13 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
 		cachedResponse := cacheResult.(cachedResponse)
 
+		log.Println(cachedResponse.CacheTime)
+		log.Println(s.cacheTime)
+		log.Println(time.Now().Unix())
 		//cache expired
-		if s.cacheTime > 0 && (cachedResponse.CacheTime+s.cacheTime) < time.Now().Second() {
+		if s.cacheTime > 0 && (cachedResponse.CacheTime+s.cacheTime) < time.Now().Unix() {
 			s.cache.Remove(urlHash)
-			return nil,false
+			return nil, false
 		}
 
 		in := *bytes.NewBuffer(cachedResponse.CompressedContent)
@@ -96,7 +99,7 @@ func (s *render) setCache(url string, response *Response) {
 		Status:            response.Status,
 		CompressedContent: in.Bytes(),
 		ContentType:       response.ContentType,
-		CacheTime:         time.Now().Second(),
+		CacheTime:         time.Now().Unix(),
 	})
 }
 
