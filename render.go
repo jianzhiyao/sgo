@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/golang-lru"
 	"io"
 	"io/ioutil"
-		"log"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -19,13 +19,15 @@ import (
 type Config struct {
 	CacheSize int
 	WaitTime  time.Duration
+	CacheTime int
 	Compress  string
 }
 
 type render struct {
 	Config
-	cache *lru.Cache
-	mutex sync.Mutex
+	cache      *lru.Cache
+	cacheTime  int
+	mutex      sync.Mutex
 	cacheMutex sync.Mutex
 }
 
@@ -39,6 +41,7 @@ type cachedResponse struct {
 	Status            int
 	CompressedContent []byte
 	ContentType       string
+	CacheTime         int
 }
 
 func (s *render) urlHash(url string) string {
@@ -55,6 +58,13 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
 		cachedResponse := cacheResult.(cachedResponse)
+
+		//cache expired
+		if s.cacheTime > 0 && (cachedResponse.CacheTime+s.cacheTime) > time.Now().Second() {
+			s.cache.Remove(urlHash)
+			return nil,false
+		}
+
 		in := *bytes.NewBuffer(cachedResponse.CompressedContent)
 		var out bytes.Buffer
 		r, _ := gzip.NewReader(&in)
@@ -86,6 +96,7 @@ func (s *render) setCache(url string, response *Response) {
 		Status:            response.Status,
 		CompressedContent: in.Bytes(),
 		ContentType:       response.ContentType,
+		CacheTime:         time.Now().Second(),
 	})
 }
 
@@ -160,7 +171,8 @@ func (s *render) GetSSR(url string) (response *Response, hitCache bool, err erro
 func NewRender(config Config) *render {
 	lruCache, _ := lru.New(config.CacheSize)
 	return &render{
-		Config: config,
-		cache:  lruCache,
+		Config:    config,
+		cache:     lruCache,
+		cacheTime: config.CacheTime,
 	}
 }

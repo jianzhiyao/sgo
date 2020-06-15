@@ -17,6 +17,7 @@ func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
 	rd := NewRender(Config{
 		CacheSize: 1000,
 		WaitTime:  time.Duration(WaitSecond),
+		CacheTime: 86400,
 	})
 
 	r.Use(func(c *gin.Context) {

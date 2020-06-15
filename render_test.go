@@ -9,6 +9,7 @@ func TestService_RenderPage(t *testing.T) {
 		CacheSize: 1000,
 		//return html after waiting
 		WaitTime: 3,
+		CacheTime: 0,
 	})
 
 	file1, _, _ := service.GetSSR("http://bing.com/")
