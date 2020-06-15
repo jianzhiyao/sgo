@@ -59,9 +59,6 @@ func (s *render) getFromCache(url string) (file *Response, ok bool) {
 	if cacheResult, ok := s.cache.Get(urlHash); ok {
 		cachedResponse := cacheResult.(cachedResponse)
 
-		log.Println(cachedResponse.CacheTime)
-		log.Println(s.cacheTime)
-		log.Println(time.Now().Unix())
 		//cache expired
 		if s.cacheTime > 0 && (cachedResponse.CacheTime+s.cacheTime) < time.Now().Unix() {
 			s.cache.Remove(urlHash)
