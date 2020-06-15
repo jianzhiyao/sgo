@@ -11,6 +11,7 @@ import (
 )
 
 func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
 	rd := NewRender(Config{

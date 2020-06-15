@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/jianzhiyao/sgo"
 	"log"
 )
 
 var (
-	port    int
-	backend string
+	port       int
+	backend    string
 	waitSecond int
 )
 
@@ -28,5 +29,7 @@ func main() {
 		return
 	}
 
-	_ = sgo.NewDefaultServer(backend, port, waitSecond).ListenAndServe()
+	if err := sgo.NewDefaultServer(backend, port, waitSecond).ListenAndServe(); err != nil {
+		fmt.Println(err)
+	}
 }
