@@ -28,11 +28,14 @@ func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
 		}
 
 		response, hitCache, err := rd.GetSSR(backendUrl)
-
 		log.Println("request:", c.Request.URL.Path)
-		log.Println("hitCache:", hitCache)
-		log.Println("ContentType:", response.ContentType)
 		log.Println("err:", err)
+		if err != nil {
+			c.String(http.StatusBadGateway, "")
+			return
+		}
+
+		log.Println("hitCache:", hitCache)
 		c.Header(`Content-Type`, response.ContentType)
 		c.String(response.Status, response.Content)
 		return
