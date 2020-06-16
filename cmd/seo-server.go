@@ -14,7 +14,7 @@ var (
 )
 
 func main() {
-	flag.IntVar(&port, `p`, 0, `set backend of server`)
+	flag.IntVar(&port, `p`, 0, `set backend server`)
 	flag.StringVar(&backend, `b`, "", `set port to listen`)
 	flag.IntVar(&waitSecond, `w`, 3, `set wait seconds to render`)
 
