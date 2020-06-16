@@ -21,6 +21,11 @@ func NewDefaultServer(backend string, port , WaitSecond int) *http.Server {
 	})
 
 	r.Use(func(c *gin.Context) {
+		startTime := time.Now()
+		defer func() {
+			runningTime :=time.Now().Sub(startTime)
+			log.Printf("runtime: %f s\n", runningTime.Seconds())
+		}()
 		backendUrl := backend + c.Request.URL.Path
 		if c.Request.Method != http.MethodGet {
 			GetProxy(backendUrl, c)
