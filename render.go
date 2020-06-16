@@ -113,11 +113,13 @@ func (s *render) GetSSR(url string) (response *Response, hitCache bool, err erro
 
 	requestUrl := url
 
+	startTime := time.Now()
 	resp, err := http.Head(requestUrl)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
+	duration := time.Now().Sub(startTime)
 
 	contentType := resp.Header.Get("Content-Type")
 
@@ -129,7 +131,7 @@ func (s *render) GetSSR(url string) (response *Response, hitCache bool, err erro
 			var res string
 			err := chromedp.Run(ctx,
 				chromedp.Navigate(requestUrl),
-				chromedp.Sleep(s.WaitTime*time.Second),
+				chromedp.Sleep(duration + s.WaitTime*time.Second),
 				chromedp.OuterHTML(`html`, &res, chromedp.NodeVisible, chromedp.ByQuery),
 			)
 			if err != nil {
