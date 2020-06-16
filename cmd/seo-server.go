@@ -14,7 +14,7 @@ var (
 )
 
 func main() {
-	flag.IntVar(&port, `p`, 0, `set backend server`)
+	flag.IntVar(&port, `p`, 8899, `set backend server`)
 	flag.StringVar(&backend, `b`, "", `set port to listen`)
 	flag.IntVar(&waitSecond, `w`, 3, `set wait seconds to render`)
 
@@ -26,6 +26,10 @@ func main() {
 	}
 	if port == 0 {
 		log.Fatal("Please set listen port(-p 8989)")
+		return
+	}
+	if waitSecond <= 0 {
+		log.Fatal("Please set correct seconds(>0) for waiting rendering(-w 3)")
 		return
 	}
 
