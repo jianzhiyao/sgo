@@ -38,5 +38,47 @@ sgo-server -b http://127.0.0.1:8080 -p 8899 -w 3
 //end for linux
 ```
 
+### vhost.conf
+
+```
+map $http_user_agent $is_bot {
+    default 0;
+    ~[a-z]bot[^a-z] 1;
+    ~[sS]pider[^a-z] 1;
+    'Yahoo! Slurp China' 1;
+    'Mediapartners-Google' 1;
+    'YisouSpider' 1;
+    'Baiduspider' 1;
+    'Googlebot' 1;
+    'MSNBot' 1;
+    'Baiduspider-image' 1;
+    'YoudaoBot' 1;
+    'Sogou web spider' 1;
+    'Sogou inst spider' 1;
+    'Sogou spider2' 1;
+    'Sogou blog' 1;
+    'Sogou News Spider' 1;
+    'Sogou Orion spider' 1;
+    'ChinasoSpider' 1;
+    'Sosospider' 1;
+    'EasouSpider' 1;
+}
+server {
+    listen 80;
+    server_name www.your-site-domain.com;
+    root "/path-to-your-site";
+
+
+    error_page 418 =200 @for_bots;
+    if ($is_bot) {
+        return 418;
+    }
+
+    location @for_bots {
+        proxy_pass http://127.0.0.1:8899;
+    }
+}
+```
+
 ## Keywords
 **SEO** **golang** **go**
